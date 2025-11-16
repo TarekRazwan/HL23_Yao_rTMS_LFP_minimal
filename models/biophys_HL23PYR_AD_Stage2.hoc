@@ -1,0 +1,96 @@
+proc biophys_HL23PYR(){
+	//$o1.delete_axon(3,1.75,1,1)
+	forsec $o1.all {
+			insert pas
+			Ra = 100
+			cm = 1
+			e_pas = -80
+			g_pas = 0.0000954
+			insert Ih
+		}
+		forsec $o1.somatic {
+			insert SK
+			insert CaDynamics
+			insert Ca_LVA
+			insert Ca_HVA
+			insert K_T
+			insert K_P
+			insert Kv3_1
+			insert NaTg
+			insert Im
+			ek = -85
+			ena = 50
+			gamma_CaDynamics = 0.0005
+			vshiftm_NaTg = 13
+			vshifth_NaTg = 15
+			slopem_NaTg = 7
+			gbar_Ih = 0.000148
+		}
+
+		forsec $o1.apical {
+			cm = 2
+		}
+		forsec $o1.basal {
+			cm = 2
+			gbar_Ih = 0.000000709
+		}
+		$o1.distribute_channels("apic","gbar_Ih",2,-0.8696,3.6161,0.0,2.0870,$o1.soma.gbar_Ih)
+
+		forsec $o1.axonal {
+			insert SK
+			insert Ca_LVA
+			insert Ca_HVA
+			insert K_T
+			insert K_P
+			insert Nap
+			insert Kv3_1
+			insert NaTg
+			insert CaDynamics
+			insert Im
+			ek = -85
+			ena = 50
+			vshifth_NaTg = 10
+			slopem_NaTg = 9
+			gamma_CaDynamics = 0.0005
+		}
+
+		$o1.distribute_channels("axon","decay_CaDynamics",0,1.000000,0.000000,0.000000,0.000000,226.0000000000)
+		$o1.distribute_channels("axon","gbar_SK",0,1.000000,0.000000,0.000000,0.000000,0.0145000000)
+		$o1.distribute_channels("axon","gbar_Ca_LVA",0,1.000000,0.000000,0.000000,0.000000,0.0439000000)
+		$o1.distribute_channels("axon","gbar_Ca_HVA",0,1.000000,0.000000,0.000000,0.000000,0.0003060000)
+		$o1.distribute_channels("axon","gbar_Kv3_1",0,1.000000,0.000000,0.000000,0.000000,0.9410000000)
+		$o1.distribute_channels("axon","gbar_K_T",0,1.000000,0.000000,0.000000,0.000000,0.0424000000)
+		$o1.distribute_channels("axon","gbar_K_P",0,1.000000,0.000000,0.000000,0.000000,0.3380000000)
+		$o1.distribute_channels("axon","gbar_Nap",0,1.000000,0.000000,0.000000,0.000000,0.0084200000)
+
+		// AD STAGE 2 (Intermediate Transition): Nav ↓15% (from 1.38 to 1.173)
+		// Stage 1: 0% reduction (1.38), Stage 2: 15% reduction (1.173), Stage 3: 30% reduction (0.966)
+		$o1.distribute_channels("axon","gbar_NaTg",0,1.000000,0.000000,0.000000,0.000000,1.1730000000)
+
+		$o1.distribute_channels("axon","gbar_Im",0,1.000000,0.000000,0.000000,0.000000,0.0000000000)
+		$o1.distribute_channels("soma","decay_CaDynamics",0,1.000000,0.000000,0.000000,0.000000,20.0000000000)
+
+		// AD STAGE 2: Im ↓25% (same as Stage 1, from 0.000306 to 0.00023)
+		$o1.distribute_channels("soma","gbar_Im",0,1.000000,0.000000,0.000000,0.000000,0.0002300000)
+
+		$o1.distribute_channels("soma","gbar_Ca_LVA",0,1.000000,0.000000,0.000000,0.000000,0.0029600000)
+		$o1.distribute_channels("soma","gbar_Ca_HVA",0,1.000000,0.000000,0.000000,0.000000,0.0015500000)
+
+		// AD STAGE 2: Kv3.1 ↓20% (from 0.0424 to 0.03392)
+		// Stage 1: 10% reduction (0.03816), Stage 2: 20% reduction (0.03392), Stage 3: 30% reduction (0.02968)
+		$o1.distribute_channels("soma","gbar_Kv3_1",0,1.000000,0.000000,0.000000,0.000000,0.0339200000)
+
+		// AD STAGE 2: SK ↓25% (same as Stages 1 & 3, from 0.000853 to 0.00064)
+		$o1.distribute_channels("soma","gbar_SK",0,1.000000,0.000000,0.000000,0.000000,0.0006400000)
+
+		$o1.distribute_channels("soma","gbar_K_T",0,1.000000,0.000000,0.000000,0.000000,0.0605000000)
+		$o1.distribute_channels("soma","gbar_K_P",0,1.000000,0.000000,0.000000,0.000000,0.0002080000)
+
+		// AD STAGE 2: NaTg ↓15% in soma as well (from 0.272 to 0.2312)
+		$o1.distribute_channels("soma","gbar_NaTg",0,1.000000,0.000000,0.000000,0.000000,0.2312000000)
+
+		$o1.myelin{
+			Ra = 100
+			cm = 0.02
+		}
+}

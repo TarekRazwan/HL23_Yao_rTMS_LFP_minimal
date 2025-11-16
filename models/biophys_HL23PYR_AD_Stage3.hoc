@@ -1,0 +1,143 @@
+// ============================================================================
+// ALZHEIMER'S DISEASE VARIANT - HL23PYR Biophysics
+// ============================================================================
+// Based on: biophys_HL23PYR.hoc (optimized healthy baseline, Stage 1)
+// Created: 2025-11-01
+//
+// AD-SPECIFIC ION CHANNEL ALTERATIONS (Literature-validated):
+// ----------------------------------------------------------------------------
+// 1. Nav1.6 (gbar_NaTg): 30% reduction
+//    - Soma: 0.272 → 0.1904 S/cm²
+//    - Axon: 1.38 → 0.966 S/cm²
+//    - Rationale: Reduced sodium channel expression in AD neurons
+//    - Expected effect: Decreased excitability, smaller AP amplitude
+//
+// 2. Kv3.1 (gbar_Kv3_1): 30% reduction
+//    - Soma: 0.0424 → 0.02968 S/cm²
+//    - Axon: 0.941 → 0.6587 S/cm²
+//    - Rationale: Impaired potassium channel function in AD
+//    - Expected effect: Slower repolarization, wider AP, altered firing
+//
+// 3. SK (gbar_SK): 25% reduction
+//    - Soma: 0.000853 → 0.00064 S/cm²
+//    - Axon: 0.0145 → 0.010875 S/cm²
+//    - Rationale: Reduced Ca²⁺-activated K⁺ channels in AD
+//    - Expected effect: Reduced adaptation, altered AHP
+//
+// PASSIVE PROPERTIES: Unchanged from healthy baseline
+// - g_pas = 0.00008 S/cm² (optimized in Stage 1)
+// - gbar_Ih = 0.00008 S/cm² (soma, optimized in Stage 1)
+// - ehcn = -37.0 mV (in Ih.mod)
+//
+// EXPECTED AD PHENOTYPE:
+// - Increased rheobase (less excitable)
+// - Reduced firing rate at suprathreshold currents
+// - Smaller action potential amplitude (Nav↓)
+// - Wider action potential (Kv↓)
+// - Weaker spike frequency adaptation (SK↓)
+// ============================================================================
+
+proc biophys_HL23PYR(){
+	//$o1.delete_axon(3,1.75,1,1)
+	forsec $o1.all {
+			insert pas
+			Ra = 100
+			cm = 1
+			e_pas = -80
+			g_pas = 0.00008  // Stage 1 optimized (unchanged for AD)
+			insert Ih
+		}
+		forsec $o1.somatic {
+			insert SK
+			insert CaDynamics
+			insert Ca_LVA
+			insert Ca_HVA
+			insert K_T
+			insert K_P
+			insert Kv3_1
+			insert NaTg
+			insert Im
+			ek = -85
+			ena = 50
+			gamma_CaDynamics = 0.0005
+			vshiftm_NaTg = 13
+			vshifth_NaTg = 15
+			slopem_NaTg = 7
+			gbar_Ih = 0.00008  // Stage 1 optimized (unchanged for AD)
+		}
+
+		forsec $o1.apical {
+			cm = 2
+		}
+		forsec $o1.basal {
+			cm = 2
+			gbar_Ih = 0.000000709
+		}
+		$o1.distribute_channels("apic","gbar_Ih",2,-0.8696,3.6161,0.0,2.0870,$o1.soma.gbar_Ih)
+
+		forsec $o1.axonal {
+			insert SK
+			insert Ca_LVA
+			insert Ca_HVA
+			insert K_T
+			insert K_P
+			insert Nap
+			insert Kv3_1
+			insert NaTg
+			insert CaDynamics
+			insert Im
+			ek = -85
+			ena = 50
+			vshifth_NaTg = 10
+			slopem_NaTg = 9
+			gamma_CaDynamics = 0.0005
+		}
+
+		// ====================================================================
+		// AXONAL CHANNEL DISTRIBUTIONS (AD-modified)
+		// ====================================================================
+		$o1.distribute_channels("axon","decay_CaDynamics",0,1.000000,0.000000,0.000000,0.000000,226.0000000000)
+
+		// SK: 25% reduction (0.0145 × 0.75 = 0.010875)
+		$o1.distribute_channels("axon","gbar_SK",0,1.000000,0.000000,0.000000,0.000000,0.0108750000)
+
+		$o1.distribute_channels("axon","gbar_Ca_LVA",0,1.000000,0.000000,0.000000,0.000000,0.0439000000)
+		$o1.distribute_channels("axon","gbar_Ca_HVA",0,1.000000,0.000000,0.000000,0.000000,0.0003060000)
+
+		// Kv3.1: 30% reduction (0.941 × 0.70 = 0.6587)
+		$o1.distribute_channels("axon","gbar_Kv3_1",0,1.000000,0.000000,0.000000,0.000000,0.6587000000)
+
+		$o1.distribute_channels("axon","gbar_K_T",0,1.000000,0.000000,0.000000,0.000000,0.0424000000)
+		$o1.distribute_channels("axon","gbar_K_P",0,1.000000,0.000000,0.000000,0.000000,0.3380000000)
+		$o1.distribute_channels("axon","gbar_Nap",0,1.000000,0.000000,0.000000,0.000000,0.0084200000)
+
+		// Nav1.6: 30% reduction (1.38 × 0.70 = 0.966)
+		$o1.distribute_channels("axon","gbar_NaTg",0,1.000000,0.000000,0.000000,0.000000,0.9660000000)
+
+		$o1.distribute_channels("axon","gbar_Im",0,1.000000,0.000000,0.000000,0.000000,0.0000000000)
+
+		// ====================================================================
+		// SOMATIC CHANNEL DISTRIBUTIONS (AD-modified)
+		// ====================================================================
+		$o1.distribute_channels("soma","decay_CaDynamics",0,1.000000,0.000000,0.000000,0.000000,20.0000000000)
+		$o1.distribute_channels("soma","gbar_Im",0,1.000000,0.000000,0.000000,0.000000,0.0003060000)
+		$o1.distribute_channels("soma","gbar_Ca_LVA",0,1.000000,0.000000,0.000000,0.000000,0.0029600000)
+		$o1.distribute_channels("soma","gbar_Ca_HVA",0,1.000000,0.000000,0.000000,0.000000,0.0015500000)
+
+		// Kv3.1: 30% reduction (0.0424 × 0.70 = 0.02968)
+		$o1.distribute_channels("soma","gbar_Kv3_1",0,1.000000,0.000000,0.000000,0.000000,0.0296800000)
+
+		// SK: 25% reduction (0.000853 × 0.75 = 0.00063975)
+		$o1.distribute_channels("soma","gbar_SK",0,1.000000,0.000000,0.000000,0.000000,0.0006397500)
+
+		$o1.distribute_channels("soma","gbar_K_T",0,1.000000,0.000000,0.000000,0.000000,0.0605000000)
+		$o1.distribute_channels("soma","gbar_K_P",0,1.000000,0.000000,0.000000,0.000000,0.0002080000)
+
+		// Nav1.6: 30% reduction (0.272 × 0.70 = 0.1904)
+		$o1.distribute_channels("soma","gbar_NaTg",0,1.000000,0.000000,0.000000,0.000000,0.1904000000)
+
+		$o1.myelin{
+			Ra = 100
+			cm = 0.02
+		}
+}

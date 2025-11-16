@@ -1,0 +1,174 @@
+// ============================================================================
+// ALZHEIMER'S DISEASE - STAGE 1: EARLY HYPEREXCITABILITY (A+/T−/N−)
+// ============================================================================
+// Based on: biophys_HL23PYR.hoc (optimized healthy baseline)
+// Created: 2025-11-01 (CORRECTED from initial hypoexcitability error)
+//
+// STAGE 1: PRECLINICAL Aβ+ HYPEREXCITABILITY
+// Evidence: "Storm before the quiet" - neuronal hyperactivity PRECEDES
+// hypoactivity in AD progression (Busche & Konnerth, Palop & Mucke)
+//
+// PRIMARY MECHANISM: REDUCED INHIBITION (not intrinsic channel loss yet)
+// - PV-interneuron dysfunction → impaired gamma, E:I imbalance
+// - GABAergic clearance defects (↓GAT-1/3) → longer IPSCs
+// - Reduced spike frequency adaptation → sustained hyperactivity
+//
+// ION CHANNEL CHANGES (EARLY AD):
+// ----------------------------------------------------------------------------
+// 1. SK (Ca²⁺-activated K⁺): 25% reduction
+//    - Soma: 0.000853 → 0.000640 S/cm²
+//    - Axon: 0.0145 → 0.010875 S/cm²
+//    - Rationale: Early SK dysfunction → LESS ADAPTATION → more sustained firing
+//    - Expected: Increased spike count during prolonged depolarization
+//
+// 2. M-current (Kv7/KCNQ): 25% reduction
+//    - Soma: 0.000306 → 0.000230 S/cm²
+//    - Rationale: M-current normally limits excitability; reduction → hyperactivity
+//    - Expected: Lower rheobase, increased spontaneous activity risk
+//
+// 3. Kv3.1: 10% reduction (modest, NOT the 30% used in late stage)
+//    - Soma: 0.0424 → 0.0382 S/cm²
+//    - Axon: 0.941 → 0.847 S/cm²
+//    - Rationale: Early Kv dysfunction, primarily affects PV cells; mild PYR effect
+//    - Expected: Slightly wider APs, but not catastrophic failure
+//
+// 4. Nav1.6 (NaTg): UNCHANGED (critical correction!)
+//    - Soma: 0.272 S/cm² (NO reduction)
+//    - Axon: 1.38 S/cm² (NO reduction)
+//    - Rationale: Nav reduction is LATE-stage; early AD may show Nav hyperactivity
+//    - Expected: Normal or enhanced AP amplitude
+//
+// PASSIVE PROPERTIES: Unchanged from healthy baseline
+// - g_pas = 0.00008 S/cm² (Stage 1 optimized)
+// - gbar_Ih = 0.00008 S/cm² (soma)
+// - ehcn = -37.0 mV (in Ih.mod)
+//
+// EXPECTED STAGE 1 PHENOTYPE (vs Healthy):
+// - Rheobase: ↓ (140-160 pA vs 170 pA) - MORE EXCITABLE
+// - Spikes @ 170 pA: ↑ (18-22 vs 15) - MORE SPIKES
+// - Spikes @ 310 pA: ↑ (25-30 Hz vs 21 Hz) - INCREASED FIRING
+// - Adaptation index: ↓ (<0.008 vs 0.011) - LESS ADAPTATION
+// - AP amplitude: → (similar or slightly larger)
+// - AP width: → (similar, not massively broadened yet)
+// - Spontaneous @ 0 pA: possible 1-2 spikes (aberrant activity)
+//
+// CONTRAST WITH STAGE 3 (LATE AD):
+// Stage 1: HYPEREXCITABLE (reduced inhibition, reduced adaptation)
+// Stage 3: HYPOEXCITABLE (Nav↓30%, severe channel dysfunction)
+// ============================================================================
+
+proc biophys_HL23PYR(){
+	//$o1.delete_axon(3,1.75,1,1)
+	forsec $o1.all {
+			insert pas
+			Ra = 100
+			cm = 1
+			e_pas = -80
+			g_pas = 0.00008  // Stage 1 optimized (unchanged)
+			insert Ih
+		}
+		forsec $o1.somatic {
+			insert SK
+			insert CaDynamics
+			insert Ca_LVA
+			insert Ca_HVA
+			insert K_T
+			insert K_P
+			insert Kv3_1
+			insert NaTg
+			insert Im
+			ek = -85
+			ena = 50
+			gamma_CaDynamics = 0.0005
+			vshiftm_NaTg = 13
+			vshifth_NaTg = 15
+			slopem_NaTg = 7
+			gbar_Ih = 0.00008  // Stage 1 optimized (unchanged)
+		}
+
+		forsec $o1.apical {
+			cm = 2
+		}
+		forsec $o1.basal {
+			cm = 2
+			gbar_Ih = 0.000000709
+		}
+		$o1.distribute_channels("apic","gbar_Ih",2,-0.8696,3.6161,0.0,2.0870,$o1.soma.gbar_Ih)
+
+		forsec $o1.axonal {
+			insert SK
+			insert Ca_LVA
+			insert Ca_HVA
+			insert K_T
+			insert K_P
+			insert Nap
+			insert Kv3_1
+			insert NaTg
+			insert CaDynamics
+			insert Im
+			ek = -85
+			ena = 50
+			vshifth_NaTg = 10
+			slopem_NaTg = 9
+			gamma_CaDynamics = 0.0005
+		}
+
+		// ====================================================================
+		// AXONAL CHANNEL DISTRIBUTIONS (Stage 1: Early AD Hyperexcitability)
+		// ====================================================================
+		$o1.distribute_channels("axon","decay_CaDynamics",0,1.000000,0.000000,0.000000,0.000000,226.0000000000)
+
+		// SK: 25% reduction (0.0145 × 0.75 = 0.010875)
+		// Rationale: Reduced adaptation → more sustained firing
+		$o1.distribute_channels("axon","gbar_SK",0,1.000000,0.000000,0.000000,0.000000,0.0108750000)
+
+		$o1.distribute_channels("axon","gbar_Ca_LVA",0,1.000000,0.000000,0.000000,0.000000,0.0439000000)
+		$o1.distribute_channels("axon","gbar_Ca_HVA",0,1.000000,0.000000,0.000000,0.000000,0.0003060000)
+
+		// Kv3.1: 10% reduction (0.941 × 0.90 = 0.8469)
+		// Rationale: Modest early dysfunction; severe reduction is LATE stage
+		$o1.distribute_channels("axon","gbar_Kv3_1",0,1.000000,0.000000,0.000000,0.000000,0.8469000000)
+
+		$o1.distribute_channels("axon","gbar_K_T",0,1.000000,0.000000,0.000000,0.000000,0.0424000000)
+		$o1.distribute_channels("axon","gbar_K_P",0,1.000000,0.000000,0.000000,0.000000,0.3380000000)
+		$o1.distribute_channels("axon","gbar_Nap",0,1.000000,0.000000,0.000000,0.000000,0.0084200000)
+
+		// Nav1.6: UNCHANGED (critical correction!)
+		// Rationale: Nav reduction is LATE-stage; early may show hyperactivity
+		$o1.distribute_channels("axon","gbar_NaTg",0,1.000000,0.000000,0.000000,0.000000,1.3800000000)
+
+		// M-current: 25% reduction (0.0 → stays 0.0 in axon)
+		$o1.distribute_channels("axon","gbar_Im",0,1.000000,0.000000,0.000000,0.000000,0.0000000000)
+
+		// ====================================================================
+		// SOMATIC CHANNEL DISTRIBUTIONS (Stage 1: Early AD Hyperexcitability)
+		// ====================================================================
+		$o1.distribute_channels("soma","decay_CaDynamics",0,1.000000,0.000000,0.000000,0.000000,20.0000000000)
+
+		// M-current (Im): 25% reduction (0.000306 × 0.75 = 0.0002295)
+		// Rationale: Key hyperexcitability mechanism; reduces spike threshold
+		$o1.distribute_channels("soma","gbar_Im",0,1.000000,0.000000,0.000000,0.000000,0.0002295000)
+
+		$o1.distribute_channels("soma","gbar_Ca_LVA",0,1.000000,0.000000,0.000000,0.000000,0.0029600000)
+		$o1.distribute_channels("soma","gbar_Ca_HVA",0,1.000000,0.000000,0.000000,0.000000,0.0015500000)
+
+		// Kv3.1: 10% reduction (0.0424 × 0.90 = 0.03816)
+		// Rationale: Modest early dysfunction
+		$o1.distribute_channels("soma","gbar_Kv3_1",0,1.000000,0.000000,0.000000,0.000000,0.0381600000)
+
+		// SK: 25% reduction (0.000853 × 0.75 = 0.00063975)
+		// Rationale: Reduced adaptation → sustained hyperactivity
+		$o1.distribute_channels("soma","gbar_SK",0,1.000000,0.000000,0.000000,0.000000,0.0006397500)
+
+		$o1.distribute_channels("soma","gbar_K_T",0,1.000000,0.000000,0.000000,0.000000,0.0605000000)
+		$o1.distribute_channels("soma","gbar_K_P",0,1.000000,0.000000,0.000000,0.000000,0.0002080000)
+
+		// Nav1.6: UNCHANGED (critical correction!)
+		// Rationale: Preserve excitability; reduction is LATE-stage only
+		$o1.distribute_channels("soma","gbar_NaTg",0,1.000000,0.000000,0.000000,0.000000,0.2720000000)
+
+		$o1.myelin{
+			Ra = 100
+			cm = 0.02
+		}
+}
