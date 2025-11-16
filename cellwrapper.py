@@ -1,7 +1,5 @@
 """
 cellwrapper.py
-Fernando's exact approach - expects cell-specific template files
-MODIFIED for Aim 1: Python-side AD parameter application
 """
 
 import sys
