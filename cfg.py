@@ -2,8 +2,6 @@
 cfg.py
 Complete simulation configuration for Yao et al. L2/3 human cortical microcircuit
 100-cell replica using NetPyNE
-
-Based on: Fernando's L23 model + Yao's biophysics
 """
 
 from netpyne import specs
